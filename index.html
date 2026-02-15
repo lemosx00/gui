@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leitor de Pontos</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f6f9; padding: 20px; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #333; padding: 8px; text-align: left; }
+        th { background-color: #ddd; }
+        input { padding: 5px; width: 200px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+    <h2>Leitor de Pontos</h2>
+    <input type="file" id="fileInput" accept=".csv">
+    <br><br>
+    <input type="text" id="search" placeholder="Pesquisar...">
+    <br><br>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Número</th>
+                <th>Nome</th>
+                <th>Linha</th>
+                <th>Horário</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+
+    <script>
+        let pontos = [];
+        const tableBody = document.getElementById("tableBody");
+        const searchInput = document.getElementById("search");
+
+        function mostrarTabela(lista) {
+            tableBody.innerHTML = "";
+            lista.forEach(ponto => {
+                const row = `<tr>
+                    <td>${ponto.numero}</td>
+                    <td>${ponto.nome}</td>
+                    <td>${ponto.linha}</td>
+                    <td>${ponto.horario}</td>
+                </tr>`;
+                tableBody.innerHTML += row;
+            });
+        }
+
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const texto = e.target.result;
+                const linhas = texto.split('\n');
+                pontos = linhas.slice(1)
+                    .filter(linha => linha.trim() !== "")
+                    .map(linha => {
+                        const colunas = linha.split(',');
+                        return {
+                            numero: colunas[0] || "",
+                            nome: colunas[1] || "",
+                            linha: colunas[2] || "",
+                            horario: colunas[3] || ""
+                        };
+                    });
+                mostrarTabela(pontos);
+            };
+            reader.readAsText(file);
+        });
+
+        searchInput.addEventListener("keyup", () => {
+            const valor = searchInput.value.toLowerCase();
+            const filtrados = pontos.filter(p => 
+                p.numero.toLowerCase().includes(valor) ||
+                p.nome.toLowerCase().includes(valor) ||
+                p.linha.toLowerCase().includes(valor) ||
+                p.horario.toLowerCase().includes(valor)
+            );
+            mostrarTabela(filtrados);
+        });
+    </script>
+
+</body>
+</html>
