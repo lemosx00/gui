@@ -1,0 +1,11 @@
+numero,nome,linha,horario
+001,Terminal Central,Linha 01,06:30
+002,Shopping Cidade,Linha 02,07:00
+003,Hospital Municipal,Linha 03,07:30
+004,Escola Estadual,Linha 04,08:00
+005,Universidade Federal,Linha 05,08:30
+006,Parque das Flores,Linha 06,09:00
+007,Praça da Bíblia,Linha 07,09:30
+008,Bairro Industrial,Linha 08,10:00
+009,Rodoviária Nova,Linha 09,10:30
+010,Centro Comercial,Linha 10,11:00
