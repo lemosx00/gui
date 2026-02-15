@@ -14,9 +14,7 @@
 </head>
 <body>
 
-    <h2>Leitor de Pontos</h2>
-    <input type="file" id="fileInput" accept=".csv">
-    <br><br>
+    <h2>Leitor de Pontos (via CSV)</h2>
     <input type="text" id="search" placeholder="Pesquisar...">
     <br><br>
 
@@ -33,54 +31,61 @@
     </table>
 
     <script>
-        let pontos = [];
+        let pontos = []; // Começa vazio, será preenchido pelo CSV
         const tableBody = document.getElementById("tableBody");
         const searchInput = document.getElementById("search");
+
+        // Função para carregar e processar o arquivo CSV
+        async function carregarCSV() {
+            try {
+                const response = await fetch('pontos.csv');
+                const data = await response.text();
+
+                // Divide o texto por linhas e remove linhas vazias
+                const linhas = data.split('\n').filter(linha => linha.trim() !== "");
+                
+                // Pula a primeira linha (cabeçalho) e processa as demais
+                pontos = linhas.slice(1).map(linha => {
+                    const colunas = linha.split(',');
+                    return {
+                        numero: colunas[0]?.trim(),
+                        nome: colunas[1]?.trim(),
+                        linha: colunas[2]?.trim(),
+                        horario: colunas[3]?.trim()
+                    };
+                });
+
+                mostrarTabela(pontos);
+            } catch (error) {
+                console.error("Erro ao carregar o arquivo CSV:", error);
+                tableBody.innerHTML = "<tr><td colspan='4'>Erro ao carregar dados do CSV.</td></tr>";
+            }
+        }
 
         function mostrarTabela(lista) {
             tableBody.innerHTML = "";
             lista.forEach(ponto => {
                 const row = `<tr>
-                    <td>${ponto.numero}</td>
-                    <td>${ponto.nome}</td>
-                    <td>${ponto.linha}</td>
-                    <td>${ponto.horario}</td>
+                    <td>${ponto.numero || ''}</td>
+                    <td>${ponto.nome || ''}</td>
+                    <td>${ponto.linha || ''}</td>
+                    <td>${ponto.horario || ''}</td>
                 </tr>`;
                 tableBody.innerHTML += row;
             });
         }
 
-        document.getElementById('fileInput').addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+        // Inicia o carregamento
+        carregarCSV();
 
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const texto = e.target.result;
-                const linhas = texto.split('\n');
-                pontos = linhas.slice(1)
-                    .filter(linha => linha.trim() !== "")
-                    .map(linha => {
-                        const colunas = linha.split(',');
-                        return {
-                            numero: colunas[0] || "",
-                            nome: colunas[1] || "",
-                            linha: colunas[2] || "",
-                            horario: colunas[3] || ""
-                        };
-                    });
-                mostrarTabela(pontos);
-            };
-            reader.readAsText(file);
-        });
-
+        // Pesquisa
         searchInput.addEventListener("keyup", () => {
             const valor = searchInput.value.toLowerCase();
             const filtrados = pontos.filter(p => 
-                p.numero.toLowerCase().includes(valor) ||
-                p.nome.toLowerCase().includes(valor) ||
-                p.linha.toLowerCase().includes(valor) ||
-                p.horario.toLowerCase().includes(valor)
+                (p.numero && p.numero.toLowerCase().includes(valor)) ||
+                (p.nome && p.nome.toLowerCase().includes(valor)) ||
+                (p.linha && p.linha.toLowerCase().includes(valor)) ||
+                (p.horario && p.horario.toLowerCase().includes(valor))
             );
             mostrarTabela(filtrados);
         });
