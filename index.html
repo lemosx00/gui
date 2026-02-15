@@ -5,18 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Leitor de Pontos</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #f4f6f9; padding: 20px; }
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid #333; padding: 8px; text-align: left; }
-        th { background-color: #ddd; }
-        input { padding: 5px; width: 200px; margin-bottom: 10px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6f9; padding: 20px; }
+        h2 { color: #333; }
+        table { border-collapse: collapse; width: 100%; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #007bff; color: white; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+        tr:hover { background-color: #e9ecef; }
+        input { padding: 10px; width: 250px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px; }
+        .status-chegando { color: #28a745; font-weight: bold; }
+        .status-agora { color: #fd7e14; font-weight: bold; }
+        .status-passou { color: #6c757d; }
     </style>
 </head>
 <body>
 
     <h2>Leitor de Pontos (via CSV)</h2>
-    <input type="text" id="search" placeholder="Pesquisar...">
-    <br><br>
+    <input type="text" id="search" placeholder="Pesquisar ponto, linha ou hora...">
+    <br>
 
     <table>
         <thead>
@@ -25,26 +31,48 @@
                 <th>Nome</th>
                 <th>Linha</th>
                 <th>Horário</th>
+                <th>Status</th>
             </tr>
         </thead>
         <tbody id="tableBody"></tbody>
     </table>
 
     <script>
-        let pontos = []; // Começa vazio, será preenchido pelo CSV
+        let pontos = [];
         const tableBody = document.getElementById("tableBody");
         const searchInput = document.getElementById("search");
 
-        // Função para carregar e processar o arquivo CSV
+        // Função para calcular o status baseado no horário
+        function calcularStatus(horarioDestino) {
+            if (!horarioDestino) return "-";
+
+            const agora = new Date();
+            const [horas, minutos] = horarioDestino.split(':').map(Number);
+            
+            const dataDestino = new Date();
+            dataDestino.setHours(horas, minutos, 0);
+
+            const diferencaMs = dataDestino - agora;
+            const diferencaMinutos = Math.ceil(diferencaMs / (1000 * 60));
+
+            if (diferencaMinutos > 0 && diferencaMinutos <= 60) {
+                return `<span class="status-chegando">Em ${diferencaMinutos} min</span>`;
+            } else if (diferencaMinutos <= 0 && diferencaMinutos > -5) {
+                return `<span class="status-agora">No ponto</span>`;
+            } else if (diferencaMinutos <= -5) {
+                return `<span class="status-passou">Já passou</span>`;
+            } else {
+                return "Agendado";
+            }
+        }
+
         async function carregarCSV() {
             try {
                 const response = await fetch('pontos.csv');
                 const data = await response.text();
 
-                // Divide o texto por linhas e remove linhas vazias
-                const linhas = data.split('\n').filter(linha => linha.trim() !== "");
+                const linhas = data.split(/\r?\n/).filter(linha => linha.trim() !== "");
                 
-                // Pula a primeira linha (cabeçalho) e processa as demais
                 pontos = linhas.slice(1).map(linha => {
                     const colunas = linha.split(',');
                     return {
@@ -58,27 +86,32 @@
                 mostrarTabela(pontos);
             } catch (error) {
                 console.error("Erro ao carregar o arquivo CSV:", error);
-                tableBody.innerHTML = "<tr><td colspan='4'>Erro ao carregar dados do CSV.</td></tr>";
+                tableBody.innerHTML = "<tr><td colspan='5'>Erro ao carregar dados do CSV.</td></tr>";
             }
         }
 
         function mostrarTabela(lista) {
             tableBody.innerHTML = "";
             lista.forEach(ponto => {
+                const statusHtml = calcularStatus(ponto.horario);
                 const row = `<tr>
                     <td>${ponto.numero || ''}</td>
                     <td>${ponto.nome || ''}</td>
                     <td>${ponto.linha || ''}</td>
                     <td>${ponto.horario || ''}</td>
+                    <td>${statusHtml}</td>
                 </tr>`;
                 tableBody.innerHTML += row;
             });
         }
 
-        // Inicia o carregamento
+        // Atualiza a tabela a cada 30 segundos para manter o status correto
+        setInterval(() => {
+            if (pontos.length > 0) mostrarTabela(pontos);
+        }, 30000);
+
         carregarCSV();
 
-        // Pesquisa
         searchInput.addEventListener("keyup", () => {
             const valor = searchInput.value.toLowerCase();
             const filtrados = pontos.filter(p => 
