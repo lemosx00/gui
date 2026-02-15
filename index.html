@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mobilidade Pro - Filtros Inteligentes</title>
+    <title>Mobilidade Pro - Central de Itinerários</title>
     <style>
         :root {
             --primary: #4361ee;
@@ -35,19 +35,31 @@
             transition: all 0.3s ease;
         }
 
-        .container { max-width: 900px; margin: 0 auto; }
+        .container { max-width: 1100px; margin: 0 auto; }
 
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .header h2 { font-size: 1.4rem; margin: 0; }
 
-        .filter-controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            position: relative;
-            flex-wrap: wrap;
+        /* BUSCA */
+        .search-container { position: relative; margin-bottom: 20px; }
+        .search-box input {
+            width: 100%; padding: 16px; padding-right: 45px;
+            border: 1px solid var(--border); border-radius: 14px;
+            background: var(--card); color: var(--text); font-size: 16px; outline: none;
+            box-sizing: border-box; transition: 0.2s;
         }
+        .search-box input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--accent); }
 
+        .btn-clear-search {
+            position: absolute; right: 15px; top: 50%; transform: translateY(-50%);
+            background: var(--border); color: var(--muted); border: none;
+            width: 24px; height: 24px; border-radius: 50%; cursor: pointer;
+            display: none; align-items: center; justify-content: center; font-size: 12px;
+        }
+        .search-box input:not(:placeholder-shown) + .btn-clear-search { display: flex; }
+
+        /* FILTROS */
+        .filter-controls { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
         .filter-btn {
             background: var(--card); border: 1px solid var(--border);
             padding: 10px 18px; border-radius: 25px; font-size: 0.85rem;
@@ -57,58 +69,40 @@
         .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
 
         .dropdown-content {
-            display: none;
-            position: absolute;
-            top: 45px;
-            left: 0;
-            background: var(--card);
-            min-width: 220px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            z-index: 100;
-            max-height: 250px;
-            overflow-y: auto;
-            padding: 8px;
+            display: none; position: absolute; top: 45px; left: 0;
+            background: var(--card); min-width: 200px; box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            border-radius: 12px; border: 1px solid var(--border); z-index: 100;
+            max-height: 250px; overflow-y: auto; padding: 8px;
         }
         .dropdown-content.show { display: block; animation: fadeIn 0.2s ease; }
-
-        .dropdown-item {
-            padding: 12px 15px;
-            cursor: pointer;
-            border-radius: 8px;
-            transition: 0.2s;
-            font-size: 0.9rem;
-            color: var(--text);
-        }
+        .dropdown-item { padding: 12px 15px; cursor: pointer; border-radius: 8px; font-size: 0.9rem; transition: 0.2s; }
         .dropdown-item:hover { background: var(--accent); color: var(--primary); }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .search-box input {
-            width: 100%; padding: 16px; border: 1px solid var(--border); border-radius: 14px;
-            background: var(--card); color: var(--text); font-size: 16px; outline: none;
-            box-sizing: border-box; margin-bottom: 20px;
-        }
-
+        /* TABELA */
         .table-wrapper { background: var(--card); border-radius: 18px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.05); overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 700px; }
-        th { background: var(--accent); padding: 18px; text-align: left; font-size: 0.7rem; color: var(--muted); text-transform: uppercase; }
-        td { padding: 18px; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        table { width: 100%; border-collapse: collapse; min-width: 950px; }
+        th { background: var(--accent); padding: 15px; text-align: left; font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        td { padding: 15px; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+
+        .col-linha { font-weight: 700; color: var(--primary); }
+        .col-turno { font-weight: 600; text-transform: uppercase; font-size: 0.75rem; color: var(--muted); }
 
         .btn-share {
             background: var(--whatsapp); color: white; border: none;
-            padding: 8px 12px; border-radius: 8px; cursor: pointer;
-            font-size: 0.8rem; display: flex; align-items: center; gap: 5px;
-            text-decoration: none; width: fit-content;
+            padding: 8px 14px; border-radius: 8px; cursor: pointer;
+            font-size: 0.75rem; display: flex; align-items: center; gap: 6px; text-decoration: none; transition: 0.2s;
         }
+        .btn-share:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3); }
 
-        @media (max-width: 650px) {
+        @media (max-width: 900px) {
             table { min-width: 100%; }
             table thead { display: none; }
-            tr { display: block; padding: 20px; border-bottom: 8px solid var(--bg); }
-            td { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border: none; }
-            td::before { content: attr(data-label); font-weight: 600; color: var(--muted); font-size: 0.75rem; text-transform: uppercase; }
+            tr { display: block; padding: 15px; border-bottom: 8px solid var(--bg); }
+            td { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border: none; text-align: right; }
+            td::before { content: attr(data-label); font-weight: 600; color: var(--muted); font-size: 0.7rem; text-transform: uppercase; text-align: left; }
+            td.col-linha { font-size: 1.2rem; color: var(--primary); border-bottom: 1px solid var(--accent); padding-bottom: 10px; margin-bottom: 10px; }
         }
 
         .skeleton { height: 15px; background: var(--border); border-radius: 10px; position: relative; overflow: hidden; margin-bottom: 10px; }
@@ -128,12 +122,15 @@
         <div id="relogio" style="font-size: 0.9rem; opacity: 0.7;">00:00:00</div>
     </div>
 
-    <div class="search-box">
-        <input type="text" id="search" placeholder="Para onde vamos?">
+    <div class="search-container">
+        <div class="search-box">
+            <input type="text" id="search" placeholder="Busque por bairro, linha ou ponto..." autocomplete="off">
+            <button class="btn-clear-search" id="clearSearch">✕</button>
+        </div>
     </div>
 
     <div class="filter-controls">
-        <button class="filter-btn active" id="btnLimpar" onclick="limparFiltros()">Limpar</button>
+        <button class="filter-btn active" id="btnLimpar" onclick="limparFiltros()">🔄 Limpar</button>
 
         <div style="position: relative;">
             <button class="filter-btn" id="btnFiltroBairro" onclick="toggleDropdown('dropBairro')">📍 Bairro ▾</button>
@@ -150,16 +147,17 @@
         <table>
             <thead>
             <tr>
+                <th>Turno</th>
+                <th>Linha</th>
+                <th>Tipo</th>
                 <th>Bairro</th>
                 <th>Ponto de Passagem</th>
                 <th>Parada</th>
-                <th>Linha</th>
-                <th>Tipo de Viagem</th>
                 <th>Ação</th>
             </tr>
             </thead>
             <tbody id="tableBody">
-            <tr><td colspan="6"><div class="skeleton"></div></td></tr>
+            <tr><td colspan="7"><div class="skeleton"></div></td></tr>
             </tbody>
         </table>
     </div>
@@ -169,10 +167,12 @@
     let pontos = [];
     let filtroAtivo = { bairro: null, linha: null };
 
+    // Relógio em tempo real
     setInterval(() => {
         document.getElementById('relogio').innerText = new Date().toLocaleTimeString('pt-br');
     }, 1000);
 
+    // Controle de Dropdowns
     function toggleDropdown(id) {
         document.querySelectorAll('.dropdown-content').forEach(d => {
             if (d.id !== id) d.classList.remove('show');
@@ -186,43 +186,43 @@
         }
     }
 
+    // Carregamento do CSV
     async function carregarCSV() {
         try {
             const response = await fetch('pontos.csv');
             const data = await response.text();
+            // Suporta separação por vírgula ou ponto e vírgula
             const linhasCSV = data.split(/\r?\n/).filter(l => l.trim() !== "");
 
             pontos = linhasCSV.slice(1).map(linha => {
-                const col = linha.split(',');
+                // Tenta separar por vírgula, se não der, tenta ponto e vírgula
+                const col = linha.includes(';') ? linha.split(';') : linha.split(',');
                 return {
-                    bairro: col[0]?.trim() || '-',
-                    ponto: col[1]?.trim() || '-',
-                    parada: col[2]?.trim() || '-',
-                    linha: col[3]?.trim() || '-',
-                    tipo: col[4]?.trim() || '-'
+                    turno: col[0]?.trim() || '-',
+                    linha: col[1]?.trim() || '-',
+                    tipo:  col[2]?.trim() || '-',
+                    bairro: col[3]?.trim() || '-',
+                    ponto:  col[4]?.trim() || '-',
+                    parada: col[5]?.trim() || '-'
                 };
             });
 
             atualizarMenus();
             aplicarFiltros();
-        } catch (e) { tableBody.innerHTML = "<tr><td colspan='6'>Erro ao carregar dados.</td></tr>"; }
+        } catch (e) {
+            tableBody.innerHTML = "<tr><td colspan='7' style='text-align:center'>Erro ao carregar o arquivo CSV. Verifique o nome e o formato.</td></tr>";
+        }
     }
 
-    // NOVA FUNÇÃO: Atualiza os dropdowns baseada no que está filtrado
+    // Filtros Inteligentes (Linha depende do Bairro)
     function atualizarMenus() {
-        // Dropdown de Bairros: Sempre mostra todos os bairros disponíveis no CSV
-        const bairrosDisponiveis = [...new Set(pontos.map(p => p.bairro))].sort();
-        document.getElementById('dropBairro').innerHTML = bairrosDisponiveis.map(b => `
+        const bairrosUnicos = [...new Set(pontos.map(p => p.bairro))].sort();
+        document.getElementById('dropBairro').innerHTML = bairrosUnicos.map(b => `
             <div class="dropdown-item" onclick="setFiltro('bairro', '${b}')">${b}</div>
         `).join('');
 
-        // Dropdown de Linhas: Depende do bairro selecionado!
-        let linhasParaMostrar = pontos;
-        if (filtroAtivo.bairro) {
-            linhasParaMostrar = pontos.filter(p => p.bairro === filtroAtivo.bairro);
-        }
-
-        const linhasUnicas = [...new Set(linhasParaMostrar.map(p => p.linha))].sort();
+        let linhasDisponiveis = filtroAtivo.bairro ? pontos.filter(p => p.bairro === filtroAtivo.bairro) : pontos;
+        const linhasUnicas = [...new Set(linhasDisponiveis.map(p => p.linha))].sort();
 
         document.getElementById('dropLinha').innerHTML = linhasUnicas.map(l => `
             <div class="dropdown-item" onclick="setFiltro('linha', '${l}')">${l}</div>
@@ -231,14 +231,13 @@
 
     function setFiltro(tipo, valor) {
         filtroAtivo[tipo] = valor;
+        const btnId = tipo === 'bairro' ? 'btnFiltroBairro' : 'btnFiltroLinha';
+        const label = tipo === 'bairro' ? `📍 ${valor}` : `🔢 ${valor}`;
 
-        const btn = tipo === 'bairro' ? 'btnFiltroBairro' : 'btnFiltroLinha';
-        const icon = tipo === 'bairro' ? '📍' : '🔢';
-        document.getElementById(btn).innerHTML = `${icon} ${valor} ▾`;
-        document.getElementById(btn).classList.add('active');
+        document.getElementById(btnId).innerHTML = `${label} ▾`;
+        document.getElementById(btnId).classList.add('active');
         document.getElementById('btnLimpar').classList.remove('active');
 
-        // Se mudar o bairro, reseta a linha selecionada para evitar conflitos
         if (tipo === 'bairro') {
             filtroAtivo.linha = null;
             document.getElementById('btnFiltroLinha').innerHTML = `🔢 Linha ▾`;
@@ -246,16 +245,20 @@
         }
 
         document.querySelectorAll('.dropdown-content').forEach(d => d.classList.remove('show'));
-
-        atualizarMenus(); // Rebuild dos menus com as novas opções
+        atualizarMenus();
         aplicarFiltros();
     }
 
     function aplicarFiltros() {
-        let resultado = pontos;
-        if (filtroAtivo.bairro) resultado = resultado.filter(p => p.bairro === filtroAtivo.bairro);
-        if (filtroAtivo.linha) resultado = resultado.filter(p => p.linha === filtroAtivo.linha);
-        mostrarTabela(resultado);
+        let res = pontos;
+        if (filtroAtivo.bairro) res = res.filter(p => p.bairro === filtroAtivo.bairro);
+        if (filtroAtivo.linha) res = res.filter(p => p.linha === filtroAtivo.linha);
+
+        const busca = document.getElementById('search').value.toLowerCase();
+        if (busca) {
+            res = res.filter(p => Object.values(p).some(v => v.toLowerCase().includes(busca)));
+        }
+        mostrarTabela(res);
     }
 
     function limparFiltros() {
@@ -265,32 +268,52 @@
         document.getElementById('btnFiltroLinha').innerHTML = `🔢 Linha ▾`;
         document.getElementById('btnFiltroLinha').classList.remove('active');
         document.getElementById('btnLimpar').classList.add('active');
+        document.getElementById('search').value = "";
         atualizarMenus();
-        mostrarTabela(pontos);
+        aplicarFiltros();
     }
 
-    function compartilhar(bairro, ponto, parada, linha, tipo) {
-        const mensagem = `🚌 *Itinerário*%0A*Bairro:* ${bairro}%0A*Linha:* ${linha}%0A*Ponto:* ${ponto}`;
-        window.open(`https://api.whatsapp.com/send?text=${mensagem}`, '_blank');
+    // WHATSAPP DIRETO PARA O NÚMERO (98) 98238-0013
+    function compartilhar(p) {
+        const numeroWhatsApp = "5598982380013";
+        const msg = `🚌 *ITINERÁRIO MOBILIDADE PRO*%0A%0A` +
+            `*Linha:* ${p.linha}%0A` +
+            `*Turno:* ${p.turno}%0A` +
+            `*Viagem:* ${p.tipo}%0A` +
+            `*Bairro:* ${p.bairro}%0A` +
+            `*Ponto:* ${p.ponto}%0A` +
+            `*Parada:* ${p.parada}`;
+
+        window.open(`https://api.whatsapp.com/send?phone=${numeroWhatsApp}&text=${msg}`, '_blank');
     }
 
     function mostrarTabela(lista) {
+        if (lista.length === 0) {
+            tableBody.innerHTML = "<tr><td colspan='7' style='text-align:center; padding: 40px;'>Nenhum resultado encontrado.</td></tr>";
+            return;
+        }
         tableBody.innerHTML = lista.map(p => `
             <tr>
-                <td data-label="Bairro"><strong>${p.bairro}</strong></td>
+                <td data-label="Turno" class="col-turno">${p.turno}</td>
+                <td data-label="Linha" class="col-linha">${p.linha}</td>
+                <td data-label="Tipo">${p.tipo}</td>
+                <td data-label="Bairro">${p.bairro}</td>
                 <td data-label="Ponto de Passagem">${p.ponto}</td>
                 <td data-label="Parada">${p.parada}</td>
-                <td data-label="Linha">${p.linha}</td>
-                <td data-label="Tipo de Viagem">${p.tipo}</td>
-                <td data-label="Ação"><button class="btn-share" onclick="compartilhar('${p.bairro}', '${p.ponto}', '${p.parada}', '${p.linha}', '${p.tipo}')">📲 Zap</button></td>
+                <td data-label="Ação">
+                    <button class="btn-share" onclick='compartilhar(${JSON.stringify(p)})'>📲 Avisar</button>
+                </td>
             </tr>
         `).join('');
     }
 
-    document.getElementById("search").addEventListener("input", (e) => {
-        const v = e.target.value.toLowerCase();
-        const f = pontos.filter(p => Object.values(p).some(val => val && val.toLowerCase().includes(v)));
-        mostrarTabela(f);
+    // Eventos de Busca
+    const inputSearch = document.getElementById("search");
+    inputSearch.addEventListener("input", aplicarFiltros);
+    document.getElementById("clearSearch").addEventListener("click", () => {
+        inputSearch.value = "";
+        aplicarFiltros();
+        inputSearch.focus();
     });
 
     carregarCSV();
