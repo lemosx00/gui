@@ -38,22 +38,42 @@
         }
 
         .container { max-width: 1100px; margin: 0 auto; }
+
+        /* AJUSTE NO HEADER PARA ACOMODAR A LOGO */
+        .header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 15px; 
+            gap: 15px;
+        }
         
-        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-alumar {
+            width: 100px; /* Ajuste o tamanho conforme preferir */
+            height: auto;
+            object-fit: contain;
+        }
+
         .header-titles h2 { font-size: 1.2rem; margin: 0; color: var(--primary); font-weight: 800; }
         .header-titles p { font-size: 0.75rem; margin: 0; color: var(--muted); font-weight: bold; }
-        
-        .header-description { 
-            font-size: 0.75rem; 
-            color: var(--muted); 
-            line-height: 1.4; 
-            margin-bottom: 15px; 
+
+        .header-description {
+            font-size: 0.75rem;
+            color: var(--muted);
+            line-height: 1.4;
+            margin-bottom: 15px;
             background: var(--accent);
             padding: 10px;
             border-radius: 8px;
         }
 
-        .datetime-box { text-align: right; line-height: 1.2; }
+        .datetime-box { text-align: right; line-height: 1.2; min-width: 80px; }
         #data-extenso { font-size: 0.75rem; font-weight: bold; color: var(--text); }
         #relogio { font-size: 0.7rem; opacity: 0.7; }
 
@@ -71,7 +91,7 @@
         }
 
         .filter-controls { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
-        
+
         .filter-btn, #btnLimpar {
             padding: 8px 10px; border-radius: 20px; font-size: 0.7rem;
             cursor: pointer; font-weight: bold; border: 1px solid var(--border);
@@ -89,7 +109,6 @@
         .dropdown-content.show { display: block; }
         .dropdown-item { padding: 8px 12px; cursor: pointer; border-radius: 6px; font-size: 0.8rem; }
 
-        /* CONTADOR DE RESULTADOS */
         .results-counter {
             font-size: 0.75rem;
             color: var(--muted);
@@ -98,7 +117,6 @@
             padding-left: 5px;
         }
 
-        /* LOADING SPINNER */
         #loader { display: flex; flex-direction: column; align-items: center; padding: 40px; }
         .spinner {
             width: 30px; height: 30px; border: 3px solid var(--border);
@@ -125,10 +143,12 @@
             tr { background: var(--card); margin-bottom: 10px; padding: 12px; border-radius: 10px; border: 1px solid var(--border); }
             td { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border: none; }
             td::before { content: attr(data-label); font-weight: 700; color: var(--muted); font-size: 0.65rem; text-transform: uppercase; }
-            td[data-label="Parada"] { 
+            td[data-label="Parada"] {
                 background: var(--accent); margin: 5px -12px; padding: 10px 12px;
                 border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
             }
+            .header-titles h2 { font-size: 1rem; }
+            .logo-alumar { width: 80px; }
         }
 
         .btn-share {
@@ -142,22 +162,25 @@
 
 <div class="container">
     <div class="header">
-        <div class="header-titles">
-            <h2>🚌 Consulta Itinerários</h2>
-            <p>Facilities & Security</p>
+        <div class="header-left">
+            <img src="logo.png" alt="Alumar Logo" class="logo-alumar">
+            <div class="header-titles">
+                <h2>Consulta Itinerários</h2>
+                <p>Facilities & Security</p>
+            </div>
         </div>
         <div class="datetime-box">
-            <div id="data-extenso">--/-- - ---</div>
+            <div id="data-extenso">--/--/-- - ---</div>
             <div id="relogio">00:00:00</div>
         </div>
     </div>
 
     <div class="header-description">
-        Site desenvolvido para consulta de itinerários. Pesquise, encontre seu ponto e clique em "📲 Enviar" para informar o transporte.
+        Site desenvolvido para consulta de itinerários. Pesquise, encontre seu ponto e, caso queira utilizar, clique em "📲 Enviar" para informar o setor responsável.
     </div>
 
     <div class="search-box">
-        <input type="text" id="search" placeholder="Procure por linha, bairro ou ponto..." autocomplete="off">
+        <input type="text" id="search" placeholder="Procure por linha, bairro, ponto de passagem ou parada..." autocomplete="off">
         <button id="clearSearch">✕</button>
     </div>
 
@@ -196,7 +219,7 @@
                         <th>Linha</th>
                         <th>Viagem</th>
                         <th>Bairro</th>
-                        <th>Ponto de Referência</th>
+                        <th>Ponto de Passagem</th>
                         <th>Parada</th>
                         <th>Ação</th>
                     </tr>
@@ -234,14 +257,14 @@
 
     async function carregarCSV() {
         try {
-            const response = await fetch('pontos.csv'); 
+            const response = await fetch('pontos.csv');
             const buffer = await response.arrayBuffer();
-            const decoder = new TextDecoder('utf-8'); 
+            const decoder = new TextDecoder('utf-8');
             const data = decoder.decode(buffer);
             const linhasCSV = data.split(/\r?\n/).filter(l => l.trim() !== "");
 
             pontos = linhasCSV.slice(1).map(linha => {
-                const col = linha.split(','); 
+                const col = linha.split(',');
                 return {
                     turno: col[0]?.trim() || '-',
                     linha: col[1]?.trim() || '-',
@@ -251,12 +274,12 @@
                     parada: col[5]?.trim() || '-'
                 };
             });
-            
+
             aplicarFiltros();
             document.getElementById('loader').classList.add('hidden');
             document.getElementById('container-tabela-completo').classList.remove('hidden');
-        } catch (e) { 
-            document.getElementById('loader').innerHTML = "Erro ao carregar dados.";
+        } catch (e) {
+            document.getElementById('loader').innerHTML = "Erro ao carregar dados. Verifique o arquivo pontos.csv";
         }
     }
 
@@ -290,11 +313,7 @@
         if (busca) res = res.filter(p => Object.values(p).some(v => v.toLowerCase().includes(busca)));
 
         const contador = document.getElementById('contador-resultados');
-        if (res.length === 1) {
-            contador.innerText = "1 resultado encontrado";
-        } else {
-            contador.innerText = `${res.length} resultados encontrados`;
-        }
+        contador.innerText = res.length === 1 ? "1 resultado encontrado" : `${res.length} resultados encontrados`;
 
         mostrarTabela(res);
         atualizarMenus();
@@ -330,7 +349,7 @@
     function compartilhar(p) {
         const agora = new Date();
         const dataFormatada = `${String(agora.getDate()).padStart(2, '0')}/${String(agora.getMonth() + 1).padStart(2, '0')}`;
-        const msg = `*SOLICITAÇÃO DE ACESSO*%0A%0A*Data:* ${dataFormatada}%0A*Linha:* ${p.linha}%0A*Turno:* ${p.turno}%0A*Bairro:* ${p.bairro}%0A*Parada:* ${p.parada}`;
+        const msg = `*SOLICITAÇÃO DE TRANSPORTE*%0A%0A*Data:* ${dataFormatada}%0A*Linha:* ${p.linha}%0A*Turno:* ${p.turno}%0A*Bairro:* ${p.bairro}%0A*Parada:* ${p.parada}`;
         window.open(`https://api.whatsapp.com/send?phone=5598982380013&text=${msg}`, '_blank');
     }
 
@@ -360,3 +379,4 @@
 
 </body>
 </html>
+
